@@ -93,5 +93,3 @@ module "superset-core" {
 | Name | Version  |
 | ---- | -------- |
 | aws  | = 3.65.0 |
-
-### Inputs
