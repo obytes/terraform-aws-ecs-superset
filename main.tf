@@ -48,16 +48,17 @@ locals  {
 
   common_tags = {
     "owner": "data",
-    "managed": "terraform"
+    "managed": "terraform",
+    "env": "prod"
   }
   node_type = { # TODO
-    "whatisthis": "r5.xlarge"
-  } 
+    "prod": "cache.r5.large"
+  }
   parameter_group_name = { # TODO
-    "whatisthis": "whatishits"
+    "prod": "default.redis6.x"
   }
   engine_version = { # TODO
-    "whatisthis": "whatishits" 
+    "prod": "6.x"
   }
 
   env_vars = {}
@@ -97,23 +98,23 @@ module "superset-db" {
   vpn_ass_cidr = "10.0.0.0/16"
 }
 
-# module "superset-redis" {
-#   source               = "./modules/aws/redis"
-#   prefix               = local.prefix
-#   common_tags          = local.common_tags
-#   vpc_id               = local.vpc_id
-#   private_subnet_ids   = local.private_subnet_ids
-#   node_type            = local.node_type
-#   parameter_group_name = local.parameter_group_name
-#   engine_version       = local.engine_version
-#   port                 = 6379
-#   allowed_security_groups = {
-#     "worker"      = module.superset-core.ecs_service_security_group_id
-#     "app"         = module.superset-core.app_service_security_group_id
-#     "worker_beat" = module.superset-core.worker_beat_service_security_group_id
-#   }
-# }
-# 
+module "superset-redis" {
+  source               = "./modules/aws/redis"
+  prefix               = local.prefix
+  common_tags          = local.common_tags
+  vpc_id               = local.vpc_id
+  private_subnet_ids   = local.private_subnet_ids
+  node_type            = local.node_type
+  parameter_group_name = local.parameter_group_name
+  engine_version       = local.engine_version
+  port                 = 6379
+  allowed_security_groups = {
+    # "worker"      = module.superset-core.ecs_service_security_group_id
+    # "app"         = module.superset-core.app_service_security_group_id
+    # "worker_beat" = module.superset-core.worker_beat_service_security_group_id
+  }
+}
+
 # module "superset-core" {
 #   source             = "./stacks/aws/superset-core-apps"
 #   repository_name    = join("-", [local.prefix, "superset"])

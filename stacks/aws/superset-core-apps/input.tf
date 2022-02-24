@@ -55,3 +55,7 @@ variable "ssm_role_arn" {
 variable "service_discovery" {
   type = any
 }
+
+variable "worker_secrets_arn"  {
+  
+}
