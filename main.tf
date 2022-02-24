@@ -73,6 +73,10 @@ locals {
   alb_sg_id          = ""
   worker_secrets_arn = ""
   ssm_role_arn       = ""
+
+  alb_hostname =  {
+    "prod": "superset-alb"
+  }
 }
 
 
@@ -115,40 +119,40 @@ module "superset-redis" {
   }
 }
 
-# module "superset-core" {
-#   source             = "./stacks/aws/superset-core-apps"
-#   repository_name    = join("-", [local.prefix, "superset"])
-#   prefix             = local.prefix
-#   common_tags        = local.common_tags
-#   kms_arn            = local.kms_arn
-#   vpc_id             = local.vpc_id
-#   private_subnet_ids = local.private_subnet_ids
-#   service_discovery  = local.service_discovery
-#   ecs_cluster        = local.ecs_cluster
-#   env_vars           = local.env_vars
-#   public_alb         = local.public_alb
-#   worker_ecs_params = {
-#     desired_count  = 1
-#     cpu            = 512
-#     memory         = 1024
-#     port           = 8088
-#     container_name = "superset-wrk"
-#   }
-#   worker_beat_ecs_params = {
-#     desired_count  = 1
-#     cpu            = 512
-#     memory         = 1024
-#     port           = 8088
-#     container_name = "superset-beat"
-#   }
-#   app_ecs_params = {
-#     desired_count  = 1
-#     cpu            = 2048
-#     memory         = 4096
-#     port           = 8088
-#     container_name = "superset-app"
-#   }
-#   alb_security_group = local.alb_sg_id
-#   ssm_role_arn       = local.ssm_role_arn # data.terraform_remote_state.east1_adm.outputs.ssm_role_arn
-#   worker_secrets_arn = local.worker_secrets_arn
-# }
+module "superset-core" {
+  source             = "./stacks/aws/superset-core-apps"
+  repository_name    = join("-", [local.prefix, "superset"])
+  prefix             = local.prefix
+  common_tags        = local.common_tags
+  kms_arn            = local.kms_arn
+  vpc_id             = local.vpc_id
+  private_subnet_ids = local.private_subnet_ids
+  service_discovery  = local.service_discovery
+  ecs_cluster        = local.ecs_cluster
+  env_vars           = local.env_vars
+  public_alb         = local.public_alb
+  worker_ecs_params = {
+    desired_count  = 1
+    cpu            = 512
+    memory         = 1024
+    port           = 8088
+    container_name = "superset-wrk"
+  }
+  worker_beat_ecs_params = {
+    desired_count  = 1
+    cpu            = 512
+    memory         = 1024
+    port           = 8088
+    container_name = "superset-beat"
+  }
+  app_ecs_params = {
+    desired_count  = 1
+    cpu            = 2048
+    memory         = 4096
+    port           = 8088
+    container_name = "superset-app"
+  }
+  alb_security_group = local.alb_sg_id
+  ssm_role_arn       = local.ssm_role_arn # data.terraform_remote_state.east1_adm.outputs.ssm_role_arn
+  worker_secrets_arn = local.worker_secrets_arn
+}
