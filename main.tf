@@ -31,48 +31,48 @@ provider "aws" {
 }
 
 
-locals  {
-  prefix = "superset"
-  vpc_id = "vpc-003d3e12a78dceefc"
-  db_identifier = "superset-db"
+locals {
+  prefix            = "superset"
+  vpc_id            = "vpc-003d3e12a78dceefc"
+  db_identifier     = "superset-db"
   allocated_storage = 10
-  cidr_block = "10.0.0.0/16"
+  cidr_block        = "10.0.0.0/16"
   superset_db_config = {
-    "db_name": "test",
-    "username": "test"
-    "password": "mkosmdlSM!1d"
+    "db_name" : "test",
+    "username" : "test"
+    "password" : "mkosmdlSM!1d"
   }
   private_subnet_ids = ["subnet-04c0045ae43a3b13c", "subnet-01cd2f7d5c38ef88f"]
-  kms_arn = "arn:aws:kms:us-east-1:962178857523:key/mrk-e29d42fb1e3549b6be0fd745a6571ca4"
-  instance_class = "db.m5.large"
+  kms_arn            = "arn:aws:kms:us-east-1:962178857523:key/mrk-e29d42fb1e3549b6be0fd745a6571ca4"
+  instance_class     = "db.m5.large"
 
   common_tags = {
-    "owner": "data",
-    "managed": "terraform",
-    "env": "prod"
+    "owner" : "data",
+    "managed" : "terraform",
+    "env" : "prod"
   }
   node_type = { # TODO
-    "prod": "cache.r5.large"
+    "prod" : "cache.r5.large"
   }
   parameter_group_name = { # TODO
-    "prod": "default.redis6.x"
+    "prod" : "default.redis6.x"
   }
   engine_version = { # TODO
-    "prod": "6.x"
+    "prod" : "6.x"
   }
 
-  env_vars = {}
+  env_vars          = {}
   service_discovery = ""
   ecs_cluster = { # TODO:
-    "": ""
+    "" : ""
   }
 
   public_alb = {
-    "": ""
+    "" : ""
   }
-  alb_sg_id = ""
+  alb_sg_id          = ""
   worker_secrets_arn = ""
-  ssm_role_arn = ""
+  ssm_role_arn       = ""
 }
 
 
