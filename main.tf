@@ -49,7 +49,8 @@ locals {
   common_tags = {
     "owner" : "data",
     "managed" : "terraform",
-    "env" : "prod"
+    "env" : "prod",
+    "region": "us-east-1"
   }
   node_type = { # TODO
     "prod" : "cache.r5.large"
@@ -61,17 +62,36 @@ locals {
     "prod" : "6.x"
   }
 
-  env_vars          = {}
-  service_discovery = ""
+  env_vars          = {
+    "COMPOSE_PROJECT_NAME": "TODO",
+    "DATABASE_DB": "TODO",
+    "DATABASE_USER": "TODO",
+    "DATABASE_PORT": "TODO",
+    "REDIS_PORT": "TODO",
+    "DATABASE_DIALECT": "TODO",
+    "FLASK_ENV": "TODO",
+    "SUPERSET_ENV": "TODO",
+    "SUPERSET_LOAD_EXAMPLES": "TODO",
+    "CYPRESS_CONFIG": "TODO",
+    "SUPERSET_PORT": "TODO",
+    "PYTHONPATH": "TODO",
+    "REDIS_CELERY_DB": "TODO",
+    "REDIS_RESULTS_DB": "TODO"
+  }
+  service_discovery = {
+    "namespace":  {
+      "namespace_id": "ns-ofelzbhmef4zwfzt" # supserOnAWS.local
+    }
+  }
   ecs_cluster = { # TODO:
-    "" : ""
+    "name" : "superset-ecs-cluster"
   }
 
   public_alb = {
-    "" : ""
+    "listener_arn" : ""
   }
   alb_sg_id          = ""
-  worker_secrets_arn = ""
+  worker_secrets_arn = "arn:aws:secretsmanager:us-east-1:962178857523:secret:superset-prod-PiUOWN"
   ssm_role_arn       = ""
 
   alb_hostname =  {

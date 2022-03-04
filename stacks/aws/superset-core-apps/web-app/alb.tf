@@ -1,3 +1,9 @@
+locals  {
+  alb_hostname = {
+    "prod": "superset-prod-alb"
+  }
+}
+
 resource "aws_alb_listener_rule" "api" {
   listener_arn = var.public_alb["listener_arn"]
   priority     = 98
@@ -7,8 +13,7 @@ resource "aws_alb_listener_rule" "api" {
   }
   condition {
     host_header {
-      # TODO: This isn't defined...
-      #values = [local.alb_hostname[var.common_tags["env"]]]
+      values = [local.alb_hostname[var.common_tags["env"]]]
     }
   }
 }
