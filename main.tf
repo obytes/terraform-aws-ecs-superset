@@ -43,6 +43,7 @@ locals {
     "password" : "mkosmdlSM!1d"
   }
   private_subnet_ids = ["subnet-04c0045ae43a3b13c", "subnet-01cd2f7d5c38ef88f"]
+  public_subnet_ids  = ["subnet-03d8ff6c1c465ff10", "subnet-0591f63ac09d0e666"]
   kms_arn            = "arn:aws:kms:us-east-1:962178857523:key/mrk-e29d42fb1e3549b6be0fd745a6571ca4"
   instance_class     = "db.m5.large"
 
@@ -83,14 +84,10 @@ locals {
       "namespace_id": "ns-ofelzbhmef4zwfzt" # supserOnAWS.local
     }
   }
-  ecs_cluster = { # TODO:
-    "name" : "superset-ecs-cluster"
-  }
-
   public_alb = {
     "listener_arn" : ""
   }
-  alb_sg_id          = ""
+  alb_sg_id          = aws_security_group.public.id
   worker_secrets_arn = "arn:aws:secretsmanager:us-east-1:962178857523:secret:superset-prod-PiUOWN"
   ssm_role_arn       = ""
 
@@ -99,6 +96,79 @@ locals {
   }
 }
 
+resource "aws_ecs_cluster" "superset" {
+  name = "superset-ecs-cluster"
+}
+resource aws_ecs_cluster_capacity_providers "superset" {
+  cluster_name = aws_ecs_cluster.superset.name
+
+  capacity_providers = ["FARGATE"]
+  default_capacity_provider_strategy {
+    base              = 1
+    weight            = 100
+    capacity_provider = "FARGATE"
+  }
+}
+
+resource "aws_security_group" "public" {
+  name = "superset-public-alb"
+  description = "Allow access to Superset ALB"
+  vpc_id = local.vpc_id
+
+  ingress {
+    description      = "TLS from Internet"
+    from_port        = 443
+    to_port          = 443
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+}
+
+resource "aws_lb" "public" {
+  name = "supserset-alb"
+  internal = false
+  load_balancer_type = "application"
+  security_groups = [aws_security_group.public.id]
+  subnets = local.public_subnet_ids
+  
+  enable_deletion_protection = true
+
+  tags = local.common_tags
+  tags_all = local.common_tags
+
+  access_logs {
+    bucket = "superset-logs"
+    prefix = "demo"
+    enabled = false
+  }
+}
+
+resource "aws_lb_listener" "public" {
+  load_balancer_arn = aws_lb.public.arn
+  #TODO: TLS
+  port = "80"
+  protocol = "HTTP"
+
+  #TODO: real default action
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Superset coming soon"
+      status_code = "200"
+    }
+  }
+  
+}
 
 
 module "superset-db" {
@@ -113,6 +183,7 @@ module "superset-db" {
   kms               = local.kms_arn
   instance_class    = local.instance_class
   security_group = [
+    aws_security_group.public.id
     # module.base.default_sg_id,
     # module.superset-core.ecs_service_security_group_id,
     # module.superset-core.app_service_security_group_id,
@@ -148,9 +219,9 @@ module "superset-core" {
   vpc_id             = local.vpc_id
   private_subnet_ids = local.private_subnet_ids
   service_discovery  = local.service_discovery
-  ecs_cluster        = local.ecs_cluster
+  ecs_cluster        = { "name": aws_ecs_cluster.superset.name }
   env_vars           = local.env_vars
-  public_alb         = local.public_alb
+  public_alb         = { "listener_arn": aws_lb_listener.public.arn }
   worker_ecs_params = {
     desired_count  = 1
     cpu            = 512
