@@ -21,10 +21,11 @@ module "worker_beat_ecs" {
       actions   = ["ssm:GetParameters", "secretsmanager:GetSecretValue"]
       resources = [data.aws_secretsmanager_secret.worker_secrets.arn]
     },
-    {
-      actions   = ["iam:PassRole"]
-      resources = [var.ssm_role_arn]
-    },
+    # TODO: again, what is this?
+    #{
+    #  actions   = ["iam:PassRole"]
+    #  resources = [var.ssm_role_arn]
+    #},
     {
       actions = [
         "ssm:AddTagsToResource",
