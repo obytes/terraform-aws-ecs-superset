@@ -61,7 +61,7 @@ module "worker_ecs" {
     "mountPoints": [
           {
             "sourceVolume": "superset_app",
-            "containerPath": "/app",
+            "containerPath": "/app-unused-efs",
             "readOnly": false
           }
         ],
