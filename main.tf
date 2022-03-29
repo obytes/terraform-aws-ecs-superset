@@ -79,8 +79,8 @@ locals {
     "CYPRESS_CONFIG": "false",
     "SUPERSET_PORT": "8088",
     "PYTHONPATH": "/app/pythonpath:/app/docker/pythonpath_dev",
-    "REDIS_CELERY_DB": "celery"
-    "REDIS_RESULTS_DB": "results"
+    "REDIS_CELERY_DB": "1"
+    "REDIS_RESULTS_DB": "2"
   }
   service_discovery = {
     "namespace":  {
