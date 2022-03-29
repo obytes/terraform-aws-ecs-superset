@@ -97,6 +97,9 @@ locals {
   alb_hostname =  {
     "prod": "superset-alb"
   }
+
+  domain_zone_id = "Z0012336234LLNF1J3R5N" # data.mainstay.com
+  domain = "superset.data.mainstay.com"
 }
 
 resource "aws_ecs_cluster" "superset" {
@@ -155,11 +158,28 @@ resource "aws_lb" "public" {
   }
 }
 
+resource "aws_route53_record" "cname" {
+  zone_id = local.domain_zone_id
+  name    = local.domain
+  type    = "CNAME"
+  ttl     = "300"
+  records = [aws_lb.public.dns_name]
+}
+
+resource "aws_acm_certificate" "public" {
+  domain_name       = aws_route53_record.cname.name
+  validation_method = "DNS"
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_lb_listener" "public" {
   load_balancer_arn = aws_lb.public.arn
-  #TODO: TLS
-  port = "443"
-  protocol = "HTTP"
+  port = 443
+  protocol = "HTTPS"
+  certificate_arn = aws_acm_certificate.public.arn
+  ssl_policy = "ELBSecurityPolicy-2016-08"
 
   #TODO: real default action
   default_action {
