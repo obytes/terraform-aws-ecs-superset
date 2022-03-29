@@ -40,7 +40,7 @@ locals {
   superset_db_config = {
     "db_name" : "superset",
     "username" : "superset"
-    "password" : "mkosmdlSM!1d"
+    "password" : jsondecode(data.aws_secretsmanager_secret_version.prod.secret_string)["DATABASE_PASSWORD"]
   }
   private_subnet_ids = ["subnet-04c0045ae43a3b13c", "subnet-01cd2f7d5c38ef88f"]
   public_subnet_ids  = ["subnet-03d8ff6c1c465ff10", "subnet-0591f63ac09d0e666"]
@@ -100,6 +100,14 @@ locals {
 
   domain_zone_id = "Z0012336234LLNF1J3R5N" # data.mainstay.com
   domain = "superset.data.mainstay.com"
+}
+
+data "aws_secretsmanager_secret" "prod" {
+  arn = "arn:aws:secretsmanager:us-east-1:962178857523:secret:superset-prod-PiUOWN"
+}
+
+data "aws_secretsmanager_secret_version" "prod" {
+  secret_id = data.aws_secretsmanager_secret.prod.id
 }
 
 resource "aws_ecs_cluster" "superset" {
