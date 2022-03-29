@@ -122,9 +122,18 @@ resource "aws_security_group" "public" {
   vpc_id = local.vpc_id
 
   ingress {
-    description      = "TLS from Internet"
+    description      = "HTTPS from Internet"
     from_port        = 443
     to_port          = 443
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  ingress {
+    description      = "HTTP from Internet"
+    from_port        = 80
+    to_port          = 80
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
@@ -174,14 +183,13 @@ resource "aws_acm_certificate" "public" {
   }
 }
 
-resource "aws_lb_listener" "public" {
+resource "aws_lb_listener" "public_https" {
   load_balancer_arn = aws_lb.public.arn
   port = 443
   protocol = "HTTPS"
   certificate_arn = aws_acm_certificate.public.arn
   ssl_policy = "ELBSecurityPolicy-2016-08"
 
-  #TODO: real default action
   default_action {
     type = "fixed-response"
     fixed_response {
@@ -190,7 +198,21 @@ resource "aws_lb_listener" "public" {
       status_code = "404"
     }
   }
+}
   
+resource "aws_lb_listener" "public_http" {
+  load_balancer_arn = aws_lb.public.arn
+  port = 80
+  protocol = "HTTP"
+
+  default_action {
+    type = "redirect"
+    redirect {
+      port = "443"
+      protocol = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
 }
 
 
@@ -244,7 +266,7 @@ module "superset-core" {
   service_discovery  = local.service_discovery
   ecs_cluster        = { "name": aws_ecs_cluster.superset.name }
   env_vars           = local.env_vars
-  public_alb         = { "listener_arn": aws_lb_listener.public.arn }
+  public_alb         = { "listener_arn": aws_lb_listener.public_https.arn }
   worker_ecs_params = {
     desired_count  = 1
     cpu            = 512
