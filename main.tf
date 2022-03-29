@@ -38,8 +38,8 @@ locals {
   allocated_storage = 10
   cidr_block        = "10.0.0.0/16"
   superset_db_config = {
-    "db_name" : "test",
-    "username" : "test"
+    "db_name" : "superset",
+    "username" : "superset"
     "password" : "mkosmdlSM!1d"
   }
   private_subnet_ids = ["subnet-04c0045ae43a3b13c", "subnet-01cd2f7d5c38ef88f"]
@@ -64,20 +64,23 @@ locals {
   }
 
   env_vars          = {
-    "COMPOSE_PROJECT_NAME": "TODO",
-    "DATABASE_DB": "TODO",
-    "DATABASE_USER": "TODO",
-    "DATABASE_PORT": "TODO",
-    "REDIS_PORT": "TODO",
-    "DATABASE_DIALECT": "TODO",
-    "FLASK_ENV": "TODO",
-    "SUPERSET_ENV": "TODO",
-    "SUPERSET_LOAD_EXAMPLES": "TODO",
-    "CYPRESS_CONFIG": "TODO",
-    "SUPERSET_PORT": "TODO",
-    "PYTHONPATH": "TODO",
-    "REDIS_CELERY_DB": "TODO",
-    "REDIS_RESULTS_DB": "TODO"
+    "COMPOSE_PROJECT_NAME": "superset",
+    "DATABASE_DIALECT": "postgres",
+    "DATABASE_USER": local.superset_db_config.username,
+    #"DATABASE_PASSWORD": from secret via ECS magic.
+    #"DATABASE_HOST": from secret via ECS magic.
+    "DATABASE_PORT": 5432,
+    "DATABASE_DB": "superset",
+    #"REDIS_HOST": from secret via ECS magic.
+    "REDIS_PORT": module.superset-redis.redis_port,
+    "FLASK_ENV": "production",
+    "SUPERSET_ENV": "production",
+    "SUPERSET_LOAD_EXAMPLES": "false",
+    "CYPRESS_CONFIG": "false",
+    "SUPERSET_PORT": "8088",
+    "PYTHONPATH": "/app/pythonpath:/app/docker/pythonpath_dev",
+    "REDIS_CELERY_DB": "celery"
+    "REDIS_RESULTS_DB": "results"
   }
   service_discovery = {
     "namespace":  {
@@ -183,12 +186,12 @@ module "superset-db" {
   kms               = local.kms_arn
   instance_class    = local.instance_class
   security_group = [
-    aws_security_group.public.id
-    # module.base.default_sg_id,
-    # module.superset-core.ecs_service_security_group_id,
-    # module.superset-core.app_service_security_group_id,
-    # module.superset-core.worker_beat_service_security_group_id,
-    # data.terraform_remote_state.east1_adm.outputs.argo_sg_id
+    aws_security_group.public.id,
+    #module.base.default_sg_id,
+    module.superset-core.ecs_service_security_group_id,
+    module.superset-core.app_service_security_group_id,
+    module.superset-core.worker_beat_service_security_group_id,
+    #data.terraform_remote_state.east1_adm.outputs.argo_sg_id
   ]
   vpn_ass_cidr = "10.0.0.0/16"
 }
@@ -212,7 +215,7 @@ module "superset-redis" {
 
 module "superset-core" {
   source             = "./stacks/aws/superset-core-apps"
-  repository_name    = join("-", [local.prefix, "superset"])
+  repository_name    = "superset"
   prefix             = local.prefix
   common_tags        = local.common_tags
   kms_arn            = local.kms_arn

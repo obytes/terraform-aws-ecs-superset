@@ -16,6 +16,7 @@ resource "aws_ecs_service" "default" {
   network_configuration {
     security_groups = [aws_security_group.ecs-service.id]
     subnets         = var.ecs_service_subnet_ids
+    assign_public_ip = true
   }
   dynamic "load_balancer" {
     for_each = var.alb_target_group_id != null ? var.alb_target_group_id : {}

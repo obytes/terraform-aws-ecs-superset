@@ -6,9 +6,9 @@ output "database_url" {
   value = "postgresql://${var.db_config["username"]}:${var.db_config["password"]}@${module.db.db["endpoint"]}/${module.db.db_name}"
 }
 
-# output "database_hostname" {
-#   value = module.db.hostname
-# }
+ output "database_hostname" {
+   value = module.db.db["endpoint"]
+ }
 
 output "db_info" {
   value = module.db.db

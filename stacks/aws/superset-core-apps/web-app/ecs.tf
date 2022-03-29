@@ -25,7 +25,7 @@ module "app_ecs" {
   service_discovery                        = var.service_discovery
   extra_iam = [
     {
-      actions   = ["ssm:GetParameters", "secretsmanager:GetSecretValue"]
+      actions   = ["ssm:GetParameters", "secretsmanager:GetSecretValue", "kms:Decrypt"]
       resources = [data.aws_secretsmanager_secret.worker_secrets.arn]
     },
     # TODO: What is this?
@@ -76,7 +76,7 @@ module "app_ecs" {
         "mountPoints": [
           {
             "sourceVolume": "superset_app",
-            "containerPath": "/app",
+            "containerPath": "/app-unused-efs",
             "readOnly": false
           }
         ],
