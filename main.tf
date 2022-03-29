@@ -158,7 +158,7 @@ resource "aws_lb" "public" {
 resource "aws_lb_listener" "public" {
   load_balancer_arn = aws_lb.public.arn
   #TODO: TLS
-  port = "80"
+  port = "443"
   protocol = "HTTP"
 
   #TODO: real default action
@@ -166,8 +166,8 @@ resource "aws_lb_listener" "public" {
     type = "fixed-response"
     fixed_response {
       content_type = "text/plain"
-      message_body = "Superset coming soon"
-      status_code = "200"
+      message_body = "Not found"
+      status_code = "404"
     }
   }
   

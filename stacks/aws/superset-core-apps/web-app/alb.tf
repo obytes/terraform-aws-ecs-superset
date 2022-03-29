@@ -1,7 +1,7 @@
 locals  {
   # TODO: Where should this come from?
   alb_hostname = {
-    "prod": "superset.prod.alb"
+    "prod": "superset.data.mainstay.com"
   }
 }
 
