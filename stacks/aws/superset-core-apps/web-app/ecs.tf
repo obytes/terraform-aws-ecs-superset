@@ -150,7 +150,12 @@ module "app_ecs" {
           {
             "name": "REDIS_HOST",
             "valueFrom": "${data.aws_secretsmanager_secret.worker_secrets.arn}:REDIS_HOST::"
+          },
+          {
+            "name": "SECRET_KEY",
+            "valueFrom": "${data.aws_secretsmanager_secret.worker_secrets.arn}:SECRET_KEY::"
           }
+
         ],
         "portMappings": [
           {
