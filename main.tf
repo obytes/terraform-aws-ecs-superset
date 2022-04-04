@@ -52,6 +52,11 @@ locals {
     "managed" : "terraform",
     "env" : "prod",
     "region": "us-east-1"
+    "VantaOwner": "edanaher@mainstay.com"
+    "VantaNonProd"  = false
+    "VantaDescription" = "Infrastructure for Superset"
+    #"VantaContainsUserData" =
+    #"VantaUserDataStored = "User emails and phone numbers"
   }
   node_type = { # TODO
     "prod" : "cache.r5.large"
