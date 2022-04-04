@@ -59,3 +59,8 @@ variable "service_discovery" {
 variable "worker_secrets_arn"  {
   
 }
+
+variable "alb_hostname" {
+  type = map(string)
+}
+

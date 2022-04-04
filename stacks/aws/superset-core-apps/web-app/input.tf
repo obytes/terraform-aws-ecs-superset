@@ -59,3 +59,8 @@ variable "efs_access_point_id" {
 variable "worker_secrets_arn" {
   type = string
 }
+
+variable "alb_hostname" {
+  type = map(string)
+}
+

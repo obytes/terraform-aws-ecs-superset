@@ -14,7 +14,7 @@ resource "aws_alb_listener_rule" "api" {
   }
   condition {
     host_header {
-      values = [local.alb_hostname[var.common_tags["env"]]]
+      values = [var.alb_hostname[var.common_tags["env"]]]
     }
   }
 }

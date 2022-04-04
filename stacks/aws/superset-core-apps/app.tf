@@ -15,6 +15,7 @@ module "app" {
   efs_access_point_id = module.app_efs.efs_access_point_id
   ssm_role_arn        = var.ssm_role_arn
   worker_secrets_arn  = var.worker_secrets_arn
+  alb_hostname        = var.alb_hostname
   app_sg = [
     {
       description : "allow the superset-app sg"

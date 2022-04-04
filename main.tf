@@ -95,7 +95,7 @@ locals {
   ssm_role_arn       = ""
 
   alb_hostname =  {
-    "prod": "superset-alb"
+    "prod": "superset.data.mainstay.com"
   }
 
   domain_zone_id = "Z0012336234LLNF1J3R5N" # data.mainstay.com
@@ -299,4 +299,5 @@ module "superset-core" {
   alb_security_group = local.alb_sg_id
   ssm_role_arn       = local.ssm_role_arn # data.terraform_remote_state.east1_adm.outputs.ssm_role_arn
   worker_secrets_arn = local.worker_secrets_arn
+  alb_hostname       = local.alb_hostname
 }
