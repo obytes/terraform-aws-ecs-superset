@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 4.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 3.0"
+    }
   }
 
   backend "s3" {
@@ -51,12 +55,12 @@ locals {
     "owner" : "data",
     "managed" : "terraform",
     "env" : "prod",
-    "region": "us-east-1"
-    "VantaOwner": "edanaher@mainstay.com"
-    "VantaNonProd"  = false
+    "region" : "us-east-1"
+    "VantaOwner" : "edanaher@mainstay.com"
+    "VantaNonProd"     = false
     "VantaDescription" = "Infrastructure for Superset"
-    #"VantaContainsUserData" =
-    #"VantaUserDataStored = "User emails and phone numbers"
+    # "VantaContainsUserData" = ""
+    # "VantaUserDataStored" = "User emails and phone numbers"
   }
   node_type = { # TODO
     "prod" : "cache.r5.large"
@@ -68,28 +72,28 @@ locals {
     "prod" : "6.x"
   }
 
-  env_vars          = {
-    "COMPOSE_PROJECT_NAME": "superset",
-    "DATABASE_DIALECT": "postgres",
-    "DATABASE_USER": local.superset_db_config.username,
+  env_vars = {
+    "COMPOSE_PROJECT_NAME" : "superset",
+    "DATABASE_DIALECT" : "postgres",
+    "DATABASE_USER" : local.superset_db_config.username,
     #"DATABASE_PASSWORD": from secret via ECS magic.
     #"DATABASE_HOST": from secret via ECS magic.
-    "DATABASE_PORT": 5432,
-    "DATABASE_DB": "superset",
+    "DATABASE_PORT" : 5432,
+    "DATABASE_DB" : "superset",
     #"REDIS_HOST": from secret via ECS magic.
-    "REDIS_PORT": module.superset-redis.redis_port,
-    "FLASK_ENV": "production",
-    "SUPERSET_ENV": "production",
-    "SUPERSET_LOAD_EXAMPLES": "false",
-    "CYPRESS_CONFIG": "false",
-    "SUPERSET_PORT": "8088",
-    "PYTHONPATH": "/app/pythonpath:/app/docker/pythonpath_dev",
-    "REDIS_CELERY_DB": "1"
-    "REDIS_RESULTS_DB": "2"
+    "REDIS_PORT" : module.superset-redis.redis_port,
+    "FLASK_ENV" : "production",
+    "SUPERSET_ENV" : "production",
+    "SUPERSET_LOAD_EXAMPLES" : "false",
+    "CYPRESS_CONFIG" : "false",
+    "SUPERSET_PORT" : "8088",
+    "PYTHONPATH" : "/app/pythonpath:/app/docker/pythonpath_dev",
+    "REDIS_CELERY_DB" : "1"
+    "REDIS_RESULTS_DB" : "2"
   }
   service_discovery = {
-    "namespace":  {
-      "namespace_id": "ns-ofelzbhmef4zwfzt" # supserOnAWS.local
+    "namespace" : {
+      "namespace_id" : "ns-ofelzbhmef4zwfzt" # supserOnAWS.local
     }
   }
   public_alb = {
@@ -99,12 +103,12 @@ locals {
   worker_secrets_arn = "arn:aws:secretsmanager:us-east-1:962178857523:secret:superset-prod-PiUOWN"
   ssm_role_arn       = ""
 
-  alb_hostname =  {
-    "prod": "superset.data.mainstay.com"
+  alb_hostname = {
+    "prod" : "analytics.mainstay.com"
   }
 
   domain_zone_id = "Z0012336234LLNF1J3R5N" # data.mainstay.com
-  domain = "superset.data.mainstay.com"
+  domain         = "analytics.mainstay.com"
 }
 
 data "aws_secretsmanager_secret" "prod" {
@@ -118,7 +122,7 @@ data "aws_secretsmanager_secret_version" "prod" {
 resource "aws_ecs_cluster" "superset" {
   name = "superset-ecs-cluster"
 }
-resource aws_ecs_cluster_capacity_providers "superset" {
+resource "aws_ecs_cluster_capacity_providers" "superset" {
   cluster_name = aws_ecs_cluster.superset.name
 
   capacity_providers = ["FARGATE"]
@@ -130,9 +134,9 @@ resource aws_ecs_cluster_capacity_providers "superset" {
 }
 
 resource "aws_security_group" "public" {
-  name = "superset-public-alb"
+  name        = "superset-public-alb"
   description = "Allow access to Superset ALB"
-  vpc_id = local.vpc_id
+  vpc_id      = local.vpc_id
 
   ingress {
     description      = "HTTPS from Internet"
@@ -162,27 +166,28 @@ resource "aws_security_group" "public" {
 }
 
 resource "aws_lb" "public" {
-  name = "supserset-alb"
-  internal = false
+  name               = "supserset-alb"
+  internal           = false
   load_balancer_type = "application"
-  security_groups = [aws_security_group.public.id]
-  subnets = local.public_subnet_ids
-  
+  security_groups    = [aws_security_group.public.id]
+  subnets            = local.public_subnet_ids
+
   enable_deletion_protection = true
 
-  tags = local.common_tags
+  tags     = local.common_tags
   tags_all = local.common_tags
 
   access_logs {
-    bucket = "superset-logs"
-    prefix = "demo"
+    bucket  = "superset-logs"
+    prefix  = "demo"
     enabled = false
   }
 }
 
+# Original record; keep in place for forwarding fow now.
 resource "aws_route53_record" "cname" {
   zone_id = local.domain_zone_id
-  name    = local.domain
+  name    = "superset.data.mainstay.com"
   type    = "CNAME"
   ttl     = "300"
   records = [aws_lb.public.dns_name]
@@ -198,31 +203,57 @@ resource "aws_acm_certificate" "public" {
 
 resource "aws_lb_listener" "public_https" {
   load_balancer_arn = aws_lb.public.arn
-  port = 443
-  protocol = "HTTPS"
-  certificate_arn = aws_acm_certificate.public.arn
-  ssl_policy = "ELBSecurityPolicy-2016-08"
+  port              = 443
+  protocol          = "HTTPS"
+  certificate_arn   = aws_acm_certificate.public.arn
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
 
   default_action {
     type = "fixed-response"
     fixed_response {
       content_type = "text/plain"
       message_body = "Not found"
-      status_code = "404"
+      status_code  = "404"
     }
   }
 }
-  
+
+resource "aws_lb_listener_rule" "redirect_superset" {
+  listener_arn = aws_lb_listener.public_https.arn
+  priority     = 50
+
+  action {
+    type = "redirect"
+    redirect {
+      host        = "analytics.mainstay.com"
+      port        = 443
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+  condition {
+    host_header {
+      values = ["superset.data.mainstay.com"]
+    }
+  }
+}
+
+resource "aws_lb_listener_certificate" "analytics" {
+  listener_arn    = aws_lb_listener.public_https.arn
+  certificate_arn = aws_acm_certificate.analytics.arn
+}
+
 resource "aws_lb_listener" "public_http" {
   load_balancer_arn = aws_lb.public.arn
-  port = 80
-  protocol = "HTTP"
+  port              = 80
+  protocol          = "HTTP"
 
   default_action {
     type = "redirect"
     redirect {
-      port = "443"
-      protocol = "HTTPS"
+      port        = "443"
+      protocol    = "HTTPS"
       status_code = "HTTP_301"
     }
   }
@@ -277,9 +308,9 @@ module "superset-core" {
   vpc_id             = local.vpc_id
   private_subnet_ids = local.private_subnet_ids
   service_discovery  = local.service_discovery
-  ecs_cluster        = { "name": aws_ecs_cluster.superset.name }
+  ecs_cluster        = { "name" : aws_ecs_cluster.superset.name }
   env_vars           = local.env_vars
-  public_alb         = { "listener_arn": aws_lb_listener.public_https.arn }
+  public_alb         = { "listener_arn" : aws_lb_listener.public_https.arn }
   worker_ecs_params = {
     desired_count  = 1
     cpu            = 512
